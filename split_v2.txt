@@ -1,0 +1,35 @@
+Sub Macro1()
+    Dim arr, d As Object, k, t, i&, lc%, rng As Range
+    Dim N As Long
+    Application.ScreenUpdating = False
+    Application.DisplayAlerts = False
+    Columns("N:R").Delete
+    Set rng = Rows(1)
+    arr = [a1].CurrentRegion
+    lc = UBound(arr, 2)
+    Set d = CreateObject("scripting.dictionary")
+    For i = 2 To UBound(arr)
+        If Not d.Exists(arr(i, 1)) Then
+            Set d(arr(i, 1)) = Cells(i, 1).Resize(1, lc)
+        Else
+            Set d(arr(i, 1)) = Union(d(arr(i, 1)), Cells(i, 1).Resize(1, lc))
+        End If
+    Next
+    k = d.Keys
+    t = d.Items
+    For i = 0 To d.Count - 1
+        With Workbooks.Add(xlWBATWorksheet)
+            rng.Copy .Sheets(1).[a1]
+            t(i).Copy .Sheets(1).[a2]
+            N = .Sheets(1).Cells(Rows.Count, "M").End(xlUp).Row
+            .Sheets(1).Cells(N + 1, "M").Formula = "=SUM(M2:M" & N & ")"
+            .Sheets(1).Cells(N + 1, "L") = "Total:"
+            .Sheets(1).Rows(N + 1).Font.Bold = True
+            .SaveAs Filename:=ThisWorkbook.Path & "\" & k(i) & "_DCSPortalBillingReport_" & Format(DateSerial(Year(Date), Month(Date) - 1, 1), "mmm-yyyy") & ".xlsx"
+            .Close
+        End With
+    Next
+    Application.DisplayAlerts = True
+    Application.ScreenUpdating = True
+    MsgBox "The reports are created!"
+End Sub
